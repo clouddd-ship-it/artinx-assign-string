@@ -71,6 +71,11 @@ public:
     friend std::istream& operator>>(std::istream& is, String& str);
 
 private:
+    char* data_;      // 缓冲区指针
+    std::size_t size_;     // 当前长度
+    std::size_t capacity_;  // 容量
+    void ensure_capacity(std::size_t needed);       
+
     // TODO: 在这里添加你自己的私有数据成员与辅助函数。
     //       可以自由选择内部表示（例如缓冲区指针 + 长度 + 容量），
     //       只要公开接口的语义满足 TASKS.md 的要求即可。
