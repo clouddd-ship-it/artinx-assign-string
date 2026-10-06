@@ -40,7 +40,7 @@
             while (target < needed) target *= 2;
             return target;
     }
- }
+ } // 匿名命名空间只能够在本文件中使用，避免与其他文件的同名函数冲突
 
  // 1. 默认构造
 String::String()
@@ -105,4 +105,101 @@ void String::push_back(char ch) {
     data_[size_] = '\0';
 }
 
+
+
+//第二部分。。
+String::String(const String& other){
+    size_=other.size_;
+    capacity_ = other.capacity_ ;//先看看别人的车厢有多大
+
+    data_= new char[capacity_+1];//申请了一块全新的“字符房间”，大小为capacity_+1.
+    for(std::size_t i = 0 ; i < size_;i++){
+        data_[i]=other.data_[i]  ;//把别人车厢里的字符一个个搬过来
+    }
+    data_[size_] = '\0'  ;//加上了结尾符号
+}
+void String::swap(String& other)noexcept//保证不会出差错
+{
+    std::swap(data_,other.data_);
+    std::swap(size_,other.size_);
+    std::swap(capacity_,other.capacity_);//swap函数交换了两个String对象的data_、size_和capacity_成员变量的值，从而实现了两个String对象的内容交换。
+}
+String& String::operator = (const String& other){
+    if (this == &other)//字符值检查，不能自己给自己倒货
+        return *this;
+  String temp(other);
+  swap(temp);
+  return *this ;  
+
 // TODO: 在此实现 include/my_string.h 中声明的所有成员函数与运算符。
+}
+String String::operator+(const String& other) const{
+    String result ;//默认空车
+    result.ensure_capacity(size_ + other.size_);//确保result车厢够大
+    for (std::size_t i = 0 ;i < size_ ;++i){
+        result.data_[i] = data_[i] ;//把自己的货装进去
+    }
+    for (std::size_t i = 0 ;i < other.size_ ;++i){
+        result.data_[size_ + i] = other.data_[i] ;//把别人的货也装进去
+    }
+    result.size_=size_+other.size_;
+    result.data_[result.size_] = '\0' ;//加上结尾符号
+    return result ;
+}
+void String::insert(std::size_t pos, const String& str) {
+    // 1. 边界检查（越界抛异常）
+    if (pos > size_) {
+        throw std::out_of_range("String::insert: pos out of range");
+    }
+
+    // 2. 插入空串，直接返回
+    if (str.size_ == 0) {
+        return;
+    }
+
+    // 3. 处理自插入（如果不处理，直接覆盖会导致源数据被破坏）
+    if (this == &str) {
+        String temp(str); // 先拷贝一份自己
+        insert(pos, temp); // 用拷贝的版本来插入
+        return;
+    }
+
+    const std::size_t added = str.size_;
+    const std::size_t new_size = size_ + added;
+
+    // 4. 判断容量是否足够
+    if (new_size <= capacity_) {
+        // --- 容量够：原地移动数据 ---
+        // 从后往前移，给新数据腾位置（防止覆盖）
+        for (std::size_t i = size_ + 1; i-- > pos; ) {
+            data_[i + added] = data_[i];
+        }
+        // 把 str 的内容复制到 pos 处
+        for (std::size_t i = 0; i < added; ++i) {
+            data_[pos + i] = str.data_[i];
+        }
+        size_ = new_size;
+        data_[size_] = '\0';
+    } else {
+        // --- 容量不够：先分配新内存 ---
+        const std::size_t target = growth_target(capacity_, new_size);
+        char* fresh = new char[target + 1];
+
+        // 复制 pos 之前的部分
+        for (std::size_t i = 0; i < pos; ++i) fresh[i] = data_[i];
+        
+        // 插入 str 的内容
+        for (std::size_t i = 0; i < added; ++i) fresh[pos + i] = str.data_[i];
+        
+        // 复制 pos 之后的部分
+        for (std::size_t i = pos; i < size_; ++i) fresh[added + i] = data_[i];
+        
+        fresh[new_size] = '\0';
+
+        // 释放旧车厢，接管新车厢
+        delete[] data_;
+        data_ = fresh;
+        size_ = new_size;
+        capacity_ = target;
+    }
+}
