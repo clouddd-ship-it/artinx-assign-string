@@ -35,6 +35,8 @@ public:
     String& operator=(const String& other);       // 复制赋值（强异常安全）
     String& operator=(String&& other) noexcept;   // 移动赋值（自移动安全）
 
+    //string&  这里的&叫做引用，它不会把别人原来的字符串复制一遍，而是直接接过来用。
+
     // ---- 拼接 ----
     String operator+(const String& other) const;
 
@@ -45,7 +47,7 @@ public:
 
     // ---- 带边界检查的访问：越界抛出 std::out_of_range ----
     char& at(std::size_t index);
-    const char& at(std::size_t index) const;
+    const char& at(std::size_t index-) const;
 
     // ---- 长度 / 容量 ----
     std::size_t size() const noexcept;
@@ -74,7 +76,7 @@ private:
     char* data_;      // 缓冲区指针
     std::size_t size_;     // 当前长度
     std::size_t capacity_;  // 容量
-    void ensure_capacity(std::size_t needed);       
+    void ensure_capacity(std::size_t needed);
 
     // TODO: 在这里添加你自己的私有数据成员与辅助函数。
     //       可以自由选择内部表示（例如缓冲区指针 + 长度 + 容量），

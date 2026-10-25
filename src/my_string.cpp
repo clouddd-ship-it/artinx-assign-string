@@ -24,26 +24,50 @@
 #include "../include/my_string.h"
 #include <stdexcept>
 #include <utility>
- namespace{
-    constexpr std::size_t kMinCapacity = 16;
+ namespace {
+    constexpr std::size_t kMinCapacity = 16;//无符号整数，专门用来表述大小，长度，或者数组下标的整数
+    //const常量  expr（expression.表达式），作用是：告诉编译器，这东西在代码还没运行时，你就提前把结果算出来，当成一个死的数写在程序里。
+    //和const的区别：const只保证运行时不修改，而constexpr强制要求在编译阶段就把结果算出来，必须在编译过程就有确定的结果。
+    //用它的好处：1，提升性能，直接在代码里替换成了数字，运行时不需要去读内存查这个变量，速度更快。2，安全，如果编译器算不出来，他会直接报错防止你写出用未知变量去开数组大小的危险代码
+    //3，在数组中中括号内必须要用编译期常量
 
     std::size_t c_str_length(const char* s){
         std::size_t len = 0 ;
-        while (s && s[len] != '\0') {
+        while (s && s[len] != '\0')//在C++中，指针用于布尔语境时会发生隐式转换。
+        //如果s是空指针（nullptr），他就会被转化为false；
+        // 如果s指向有效内存，不是空指针，他就会被转化为true
+        //空指针是地址不存在，没有这个地方，指向内存为空的内存的地址的指针不算空指针
+        //这样的写法避免了空指针和空内存。
+        //while的括号内是条件判断，属于布尔语境+++
+        {
             ++len;
         }
         return len ;
         }
 
         std::size_t growth_target(std::size_t current, std::size_t needed){
-            std::size_t target = current < kMinCapacity ? kMinCapacity : current;
+            std::size_t target = current < kMinCapacity ? kMinCapacity : current;//三目运算符：如果问号前面的条件成立，就选前者，否则后者。
             while (target < needed) target *= 2;
             return target;
     }
  } // 匿名命名空间只能够在本文件中使用，避免与其他文件的同名函数冲突
+ //匿名空间只写在cpp文件中，不能写在头文件中。
+ //为什么要使用匿名命名空间：在开发大项目时，会有成百上千个cpp文件，经常会发生撞名字的情况，只要把自己写的辅助函数用匿名命名空间包起来，就可以避免。
+ //不适用static：因为static在c++中兼职太多，可以修饰局部变量（静态变量）也可以修饰类成员（静态成员）
+ //怎么使用：直接调用即可，因为没有名字，所以没法像MySpace::add()这样用
 
  // 1. 默认构造
 String::String()
+//这是极其专业的初始化列表写法：如果你在函数体里面写，系统会提前给你一套默认家具，等你初始化的时候就是把旧家具丢了换新家具，无用功；而冒号开头的打法可以在
+//装修开始之前联系装修公司提前确定所需家具，直接就把你要的家具装进去，就方便多了。
+//：（冒号）是初始化列表开始的符号。
+//new 是在系统内存里找一块地方，让后把这块地方的首地址（第一个房间的房卡）告诉你。new操作符的作用是“向内存要一块地”。而它返回给你的，不是地上的东西。二十这块地的
+//门牌号（地址）。在C++中，专门用来存“门牌号”的变量类型，就是指针
+//new char[...+1]申请了一块连续的字符内存，并且它返回了这块内存的首地址，data_变量接受了这个地址，所以data_的数据类型一定是char* 
+//在底层，new只做了两件事：1，分配内存。2，返回第一个元素的地址（指针）
+
+//初始化列表：如果你在函数体里面写初始化（赋值），在进入大括号之前，data_这个指针已经产生了，里面最开始存着一个随机垃圾地址，进入大括号后，再用new申请一块内存
+//，把地址赋值给它，就会造成那个随即垃圾地址指向的内存你永远找不到也无法释放，造成内存泄漏。
     : data_(new char[kMinCapacity + 1]), size_(0), capacity_(kMinCapacity) {
     data_[0] = '\0';
 }
@@ -101,14 +125,14 @@ void String::ensure_capacity(std::size_t needed) {
 void String::push_back(char ch) {
     ensure_capacity(size_ + 1);
     data_[size_] = ch;
-    ++size_;
+    size_++;
     data_[size_] = '\0';
 }
 
 
 
 //第二部分。。
-String::String(const String& other){
+String::String(const String& other) {
     size_=other.size_;
     capacity_ = other.capacity_ ;//先看看别人的车厢有多大
 
